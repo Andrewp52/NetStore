@@ -4,7 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.example.netstore.common.dto.UserDto;
 import org.example.netstore.common.protocol.exceptions.storage.StorageException;
-import org.example.netstore.common.protocol.requests.RequestServer;
+import org.example.netstore.nettyserver.channelhandlers.requestservers.RequestServer;
 import org.example.netstore.common.protocol.requests.storage.StorageRequest;
 import org.example.netstore.common.protocol.responses.Response;
 import org.example.netstore.common.protocol.responses.error.ServerErrorResponse;

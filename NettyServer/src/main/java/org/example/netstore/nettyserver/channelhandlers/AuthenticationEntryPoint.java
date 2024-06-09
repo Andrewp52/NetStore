@@ -6,7 +6,7 @@ import io.netty.util.AttributeKey;
 import org.example.netstore.common.protocol.exceptions.auth.AuthException;
 import org.example.netstore.common.protocol.requests.AuthCommand;
 import org.example.netstore.common.protocol.requests.Request;
-import org.example.netstore.common.protocol.requests.RequestServer;
+import org.example.netstore.nettyserver.channelhandlers.requestservers.RequestServer;
 import org.example.netstore.common.protocol.requests.RequestType;
 import org.example.netstore.common.protocol.requests.auth.AuthRequest;
 import org.example.netstore.common.protocol.responses.auth.LoginResponse;
