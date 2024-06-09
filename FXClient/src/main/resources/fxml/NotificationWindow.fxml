@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane minHeight="200.0" minWidth="300.0" prefHeight="200.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.netstore.fxclient.controllers.NotificationWindowController">
+   <children>
+      <VBox alignment="CENTER" layoutX="240.0" layoutY="73.0" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+         <children>
+            <ImageView fx:id="typeImageView" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true" VBox.vgrow="NEVER" />
+            <Label fx:id="messageLabel" alignment="TOP_LEFT" contentDisplay="CENTER">
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin></Label>
+            <Button minWidth="120.0" mnemonicParsing="false" onAction="#closePressed" text="Close">
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
