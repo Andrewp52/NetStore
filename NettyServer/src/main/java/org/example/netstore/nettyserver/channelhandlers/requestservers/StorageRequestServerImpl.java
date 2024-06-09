@@ -10,23 +10,37 @@ import org.example.netstore.common.protocol.responses.storage.DirResponse;
 import org.example.netstore.common.protocol.responses.storage.MkdirResponse;
 import org.example.netstore.nettyserver.services.store.StorageService;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
 public class StorageRequestServerImpl implements RequestServer {
     private final StorageService storageService;
 
     public StorageRequestServerImpl(StorageService storageService) {
         this.storageService = storageService;
     }
+    private final Map<Class<? extends Request>, Function<Request, Response>> functionMap = new HashMap<>();
 
+    {
+        Arrays.stream(StorageRequestServerImpl.class.getDeclaredMethods())
+                .filter(method -> method.getReturnType().equals(Response.class))
+                .forEach(method -> {
+                    Class param = method.getParameterTypes()[0];
+                    functionMap.put(param, request -> {
+                        try {
+                            return (Response) method.invoke(this, request);
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                });
+    }
     @Override
     public Response serve(Request request) {
-        return switch (request) {
-            case DirRequest req -> serveReq(req);
-            case MkdirRequest req -> serveReq(req);
-            case PostSizeCheckRequest req -> serveReq(req);
-            case GetChunkSizeRequest req -> serveReq(req);
-            case GetChunkRequest req -> serveReq(req);
-            default -> throw new IllegalStateException("Unexpected value: " + request);
-        };
+        return functionMap.get(request.getClass()).apply(request);
     }
 
     private Response serveReq(GetChunkSizeRequest req) {
