@@ -14,21 +14,38 @@ import org.example.netstore.common.protocol.responses.auth.ProfileActionResponse
 import org.example.netstore.nettyserver.User;
 import org.example.netstore.nettyserver.services.auth.AuthService;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
 public class AuthRequestServerImpl implements RequestServer {
     private final AuthService service;
 
     public AuthRequestServerImpl(AuthService service) {
         this.service = service;
     }
+    private final Map<Class<? extends Request>, Function<Request, Response>> functionMap = new HashMap<>();
+
+    {
+        Arrays.stream(AuthRequestServerImpl.class.getDeclaredMethods())
+                .filter(method -> method.getReturnType().equals(Response.class))
+                .forEach(method -> {
+                    Class param = method.getParameterTypes()[0];
+                    functionMap.put(param, request -> {
+                        try {
+                            return (Response) method.invoke(this, request);
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                });
+    }
 
     @Override
     public Response serve(Request request) {
-        return switch (request) {
-            case LoginRequest request1 -> serveReq(request1);
-            case ChangePasswordRequest request1 -> serveReq(request1);
-            case UpdateProfileRequest request1 -> serveReq(request1);
-            default -> throw new IllegalStateException("Unexpected value: " + request);
-        };
+        return functionMap.get(request.getClass()).apply(request);
     }
 
     private Response serveReq(LoginRequest request){
