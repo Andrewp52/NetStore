@@ -1,6 +1,7 @@
 package org.example.netstore.fxclient.controllers.filebrowsertable;
 
 
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableView;
 import javafx.scene.input.MouseButton;
 import org.example.netstore.fxclient.services.browsers.FileBrowser;
@@ -16,6 +17,7 @@ public class FileBrowserTableInitializer {
         tableView.getColumns().add(new TypeColumn());
         tableView.getColumns().add(new SizeColumn());
         tableView.getSortOrder().add(nameColumn);
+        tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         addMouseClickListener(tableView, browser, viewer);
     }
 
@@ -24,7 +26,7 @@ public class FileBrowserTableInitializer {
             if(evt.getButton().equals(MouseButton.PRIMARY) && evt.getClickCount() > 1){
                 File f = tableView.getSelectionModel().getSelectedItem();
                 if(f.getName().isBlank() || f.isDirectory()){
-                    tableView.getItems().setAll(browser.dir(f.getPath()));
+                    tableView.getItems().setAll(browser.dir(f.getPath(), false));
                     tableView.sort();
                 } else if(!f.getName().isBlank() && !f.isDirectory()){
                     viewer.accept(f);

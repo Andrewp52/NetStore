@@ -3,16 +3,15 @@ package org.example.netstore.fxclient.services.browsers.remote;
 import org.example.netstore.fxclient.netclient.NetClient;
 
 import java.io.*;
+import java.util.Arrays;
 
 
 public class RemoteInputStream extends InputStream {
-    private final NetClient client;
-    private Downloader downloader;
+    private final Downloader downloader;
     private byte[] currentChunk;
     private int bytesRead;
 
     public RemoteInputStream(File remoteFile, NetClient client) throws Exception {
-        this.client = client;
         this.downloader = new Downloader(remoteFile, client);
         this.downloader.setDaemon(true);
         this.downloader.start();
@@ -28,6 +27,57 @@ public class RemoteInputStream extends InputStream {
             return currentChunk[bytesRead++] & 0xFF;
         }
         return -1;
+    }
+
+    @Override
+    public byte[] readNBytes(int len) throws IOException {
+        checkChunk();
+        if(len == currentChunk.length){
+            return getSameSizeChunk();
+        }
+        return getOffSizeChunk(len);
+    }
+
+    private byte[] getOffSizeChunk(int len) {
+        if(len <= currentChunk.length - bytesRead){
+            byte[] chunk = Arrays.copyOfRange(currentChunk, bytesRead, bytesRead + len);
+            bytesRead += len;
+            return chunk;
+        } else {
+            return accumulateChunk(len);
+        }
+    }
+
+    private byte[] accumulateChunk(int len) {
+        byte[] chunk;
+        if(len <= currentChunk.length - bytesRead){
+            chunk = Arrays.copyOfRange(currentChunk, bytesRead, bytesRead + len);
+            bytesRead += len;
+        } else {
+            chunk = new byte[(int) Math.min(currentChunk.length - bytesRead + downloader.getAvailable(), len)];
+            int index = 0;
+            while (index < chunk.length){
+                int length = Math.min(chunk.length - index, currentChunk.length - bytesRead);
+                System.arraycopy(currentChunk, bytesRead, chunk, index, length);
+                index += length;
+                bytesRead += length;
+                checkChunk();
+            }
+        }
+        return chunk;
+    }
+
+    private void checkChunk(){
+        if((currentChunk == null || bytesRead == currentChunk.length) && downloader.getAvailable() > 0){
+            currentChunk = downloader.nextChunk();
+            bytesRead = 0;
+        }
+    }
+    private byte[] getSameSizeChunk(){
+        byte[] chunk = currentChunk;
+        currentChunk = null;
+        bytesRead = 0;
+        return chunk;
     }
 
     @Override

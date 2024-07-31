@@ -2,7 +2,7 @@ package org.example.netstore.common.dto;
 
 import org.example.netstore.common.protocol.responses.storage.StorageResponse;
 
-import java.io.Serializable;
+
 import java.util.UUID;
 
 public class FileChunk extends StorageResponse {

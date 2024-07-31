@@ -18,6 +18,7 @@ public class FileInfoDto extends File {
         super(file.getPath());
         this.length = file.length();
         this.isDirectory = file.isDirectory();
+        this.parent = file.getParent();
     }
 
     @Override

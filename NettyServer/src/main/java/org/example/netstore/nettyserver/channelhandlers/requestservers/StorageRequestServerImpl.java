@@ -36,13 +36,13 @@ public class StorageRequestServerImpl extends AbstractRequestServer {
 
     Response serveReq(PostSizeCheckRequest request){
         if(storageService.checkWriteSize(request.getStoreSize())){
-            return new BooleanResponse(ResponseType.OK, request.getUUID(), ResponseSource.STORAGE);
+            return new BooleanResponse(true, ResponseType.OK, request.getUUID(), ResponseSource.STORAGE);
         }
         throw new StorageException("Not enough free space", request.getUUID());
     }
 
     Response serveReq(PostChunkRequest request){
-        return null;
+        return new LongResponse(storageService.writeChunk(request.getPath(), request.getOffset(), request.getChunk()), request.getUUID());
     }
 
     Response serveReq(GetChunkRequest request){

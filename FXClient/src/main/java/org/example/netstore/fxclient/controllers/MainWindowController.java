@@ -15,24 +15,20 @@ import org.example.netstore.fxclient.controllers.filebrowsertable.FileBrowserTab
 import org.example.netstore.fxclient.netclient.NetClient;
 import org.example.netstore.fxclient.netclient.NetClientFactory;
 import org.example.netstore.fxclient.services.browsers.FileBrowser;
-import org.example.netstore.fxclient.services.browsers.remote.RemoteInputStream;
-import org.example.netstore.fxclient.services.exchange.*;
 import org.example.netstore.fxclient.services.browsers.local.LocalFileBrowser;
 import org.example.netstore.fxclient.services.browsers.remote.RemoteFileBrowser;
+import org.example.netstore.fxclient.services.exchange.ProgressMonitoringExchangerImpl;
 import org.example.netstore.fxclient.services.fileviewers.DesktopRemoteViewer;
 import org.example.netstore.fxclient.services.fileviewers.DesktopViewer;
 import org.example.netstore.fxclient.stages.EnterStringStage;
+import org.example.netstore.fxclient.stages.ExchangeWindowStage;
 import org.example.netstore.fxclient.stages.LoginWindowStage;
 import org.example.netstore.fxclient.stages.notifications.ErrorWindowStage;
 
-import java.awt.*;
 import java.io.*;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.attribute.FileAttribute;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 
 public class MainWindowController implements Initializable {
 
@@ -146,7 +142,7 @@ public class MainWindowController implements Initializable {
     public void deleteButtonClicked(ActionEvent actionEvent) {
     }
 
-    public void newDirButtonClicked(ActionEvent actionEvent) {
+    public void newDirButtonClicked(ActionEvent actionEvent) throws IOException {
         try {
             String path = new EnterStringStage("Create directory", "New directory path").display();
             switch (((Button) actionEvent.getSource()).getId()) {
@@ -154,16 +150,12 @@ public class MainWindowController implements Initializable {
                 case "remoteNewDirButton" -> addToBrowserTable(remoteBrowserTable, remoteBrowser.mkDir(path));
             }
         } catch (IOException e) {
-            try {
-                new ErrorWindowStage("New directory error", e.getMessage()).showAndWait();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+            new ErrorWindowStage("New directory error", e.getMessage()).showAndWait();
         }
     }
 
     public void homeButtonClicked(ActionEvent actionEvent) {
-        updateBrowserTable(remoteBrowserTable, remoteBrowser.dir(""));
+        updateBrowserTable(remoteBrowserTable, remoteBrowser.dir("", true));
     }
 
     public void backButtonClicked(ActionEvent actionEvent) {
@@ -200,9 +192,33 @@ public class MainWindowController implements Initializable {
     }
 
     public void updatePanelsOnShow() {
-        updateBrowserTable(localBrowserTable, localBrowser.dir(""));
-        updateBrowserTable(remoteBrowserTable, remoteBrowser.dir(""));
+        updateBrowserTable(localBrowserTable, localBrowser.dir());
+        updateBrowserTable(remoteBrowserTable, remoteBrowser.dir());
     }
 
+    public void download(ActionEvent actionEvent) throws IOException {
+        try {
+            new ExchangeWindowStage(
+                    new ProgressMonitoringExchangerImpl(localBrowser, remoteBrowser),
+                    remoteBrowserTable.getSelectionModel().getSelectedItems(),
+                    true
+            ).showAndWait();
+            updateBrowserTable(localBrowserTable, localBrowser.dir());
+        } catch (IOException e) {
+            new ErrorWindowStage("Download error", e.getMessage());
+        }
+    }
 
+    public void upload(ActionEvent actionEvent) throws IOException {
+        try {
+            new ExchangeWindowStage(
+                    new ProgressMonitoringExchangerImpl(localBrowser, remoteBrowser),
+                    localBrowserTable.getSelectionModel().getSelectedItems(),
+                    false
+            ).showAndWait();
+            updateBrowserTable(remoteBrowserTable, remoteBrowser.dir());
+        } catch (IOException e) {
+            new ErrorWindowStage("Upload error", e.getMessage());
+        }
+    }
 }

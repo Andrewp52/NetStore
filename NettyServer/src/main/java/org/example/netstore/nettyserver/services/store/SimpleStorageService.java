@@ -6,12 +6,10 @@ import org.example.netstore.common.protocol.requests.storage.MkdirRequest;
 import org.example.netstore.nettyserver.PropertiesHolder;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -97,6 +95,25 @@ public class SimpleStorageService implements StorageService {
             raf.seek(offset);
             raf.read(bytes);
             return bytes;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public long writeChunk(String path, long offset, byte[] chunk) {
+        Path p = USER_HOME.resolve(path);
+        if(!Files.exists(p.getParent())){
+            try {
+                Files.createDirectories(p);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        try (RandomAccessFile raf = new RandomAccessFile(p.toFile(), "rw")){
+            raf.seek(offset);
+            raf.write(chunk);
+            return chunk.length;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

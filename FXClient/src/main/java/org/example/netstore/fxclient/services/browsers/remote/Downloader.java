@@ -6,7 +6,6 @@ import org.example.netstore.common.protocol.responses.error.ErrorResponse;
 import org.example.netstore.fxclient.netclient.NetClient;
 
 import java.io.File;
-import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Chunk by chunk, using read ahead buffer
  */
 public class Downloader extends Thread {
-    private static final int BUFFER_CAPACITY = 100;
+    private static final int BUFFER_CAPACITY = 10;
     private final Queue<byte[]> buffer = new ArrayBlockingQueue<>(BUFFER_CAPACITY, true);
     private final Object bufferMonitor = new Object();
     private final AtomicInteger chunksInProgress = new AtomicInteger();
@@ -45,7 +44,6 @@ public class Downloader extends Thread {
                     try {
                         bufferMonitor.wait();
                     } catch (InterruptedException e) {
-                        this.interrupt();
                         throw new RuntimeException(e);
                     }
                 }
@@ -66,7 +64,6 @@ public class Downloader extends Thread {
                     }
                 });
             } catch (Exception e) {
-                this.interrupt();
                 throw new RuntimeException(e);
             }
         }
@@ -93,25 +90,6 @@ public class Downloader extends Thread {
         }
         available -= chunk.length;
         return chunk;
-    }
-
-    private static class Chunk {
-        long offset;
-        String path;
-
-        public Chunk( long offset, String path) {
-            this.offset = offset;
-            this.path = path;
-        }
-
-        public static Queue<Chunk> queueFromFile(File file, int chunkSize){
-            int count = (int) (file.length() % chunkSize == 0 ? file.length() / chunkSize : file.length() / chunkSize + 1);
-            Queue<Chunk> queue = new ArrayDeque<>(count);
-            for (int i = 0; i < count; i++) {
-                queue.add(new Chunk((long) chunkSize * i, file.getPath()));
-            }
-            return queue;
-        }
     }
 
 }
